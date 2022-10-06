@@ -1,15 +1,13 @@
 const path = require("path");
-
-// Use the existing order data
 const orders = require(path.resolve("src/data/orders-data"));
-
-// Use this function to assigh ID's when necessary
 const nextId = require("../utils/nextId");
+
 
 // TODO: Implement the /orders handlers needed to make the tests pass
 
-// Middleware / Validation: if requirements not met will return error message
+// Middleware and Validation
 
+//Validate existence of deliverTo
 function deliverToExists(req, res, next) {
   const { data: { deliverTo } = {} } = req.body;
 
@@ -22,6 +20,7 @@ function deliverToExists(req, res, next) {
   });
 }
 
+//Validate existence of mobileNumber
 function mobileNumberExists(req, res, next) {
   const { data: { mobileNumber } = {} } = req.body;
 
@@ -34,6 +33,7 @@ function mobileNumberExists(req, res, next) {
   });
 }
 
+//Validate existence of dishes
 function dishesExists(req, res, next) {
   const { data: { dishes } = {} } = req.body;
 
@@ -51,6 +51,7 @@ function dishesExists(req, res, next) {
   return next();
 }
 
+//Validate existence of dishQuantity
 function dishQuantityExists(req, res, next) {
   const { data: { dishes } = {} } = req.body;
   const index = dishes.findIndex((dish) => !dish.quantity);
@@ -65,6 +66,7 @@ function dishQuantityExists(req, res, next) {
   return next();
 }
 
+//Ensure that dishQuantity is an integer
 function dishQuantityIsInteger(req, res, next) {
   const { data: { dishes } = {} } = req.body;
   const index = dishes.findIndex((dish) => !Number.isInteger(dish.quantity));
@@ -79,6 +81,7 @@ function dishQuantityIsInteger(req, res, next) {
   return next();
 }
 
+//Validate existence of order
 function orderExists(req, res, next) {
   const { orderId } = req.params;
   const foundOrder = orders.find((order) => order.id === orderId);
@@ -94,6 +97,7 @@ function orderExists(req, res, next) {
   });
 }
 
+//Ensure status is valid
 function statusExists(req, res, next) {
   const { data: { status } = {} } = req.body;
 
@@ -112,6 +116,7 @@ function statusExists(req, res, next) {
   });
 }
 
+//Chack if order status is pending
 function statusPending(req, res, next) {
   const { order } = res.locals;
 
@@ -125,15 +130,18 @@ function statusPending(req, res, next) {
   });
 }
 
-// CRUDL
+/*********************************************/
 
+//LIST FUNCTION
 function list(req, res) {
   res.json({ data: orders });
 }
 
+//CREATE FUNCTION
 function create(req, res) {
   const { data: { deliverTo, mobileNumber, dishes } = {} } = req.body;
   const newId = nextId();
+
   const newOrder = {
     id: newId,
     deliverTo,
@@ -145,25 +153,25 @@ function create(req, res) {
   res.status(201).json({ data: newOrder });
 }
 
+//READ FUNCTION
 function read(req, res) {
   const order = res.locals.order;
   res.json({ data: order });
 }
 
+//UPDATE FUNCTION
 function update(req, res, next) {
   const order = res.locals.order;
   const { orderId } = req.params;
   const { data: { id, deliverTo, mobileNumber, dishes, status } = {} } =
     req.body;
-  if (!id || orderId === id) {
-    const updatedOrder = {
-      id: orderId,
-      deliverTo,
-      mobileNumber,
-      dishes,
-      status,
-    };
-    res.json({ data: updatedOrder });
+  if (orderId === id) {
+    order.deliverTo = deliverTo;
+    order.mobileNumber = mobileNumber;
+    order.dishes = dishes;
+    order.status = status;
+
+    res.json({ data: order });
   }
 
   next({
@@ -172,6 +180,7 @@ function update(req, res, next) {
   });
 }
 
+//DELETE FUNCTION
 function destroy(req, res, next) {
   const { orderId } = req.params;
   const index = orders.findIndex((order) => order.id === orderId);
@@ -199,6 +208,10 @@ module.exports = {
     statusExists,
     update,
   ],
-  delete: [orderExists, statusPending, destroy],
+  delete: [
+      orderExists,
+    statusPending,
+    destroy,
+  ],
   list,
 };
