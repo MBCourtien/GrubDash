@@ -2,8 +2,10 @@ const path = require("path");
 const dishes = require(path.resolve("src/data/dishes-data"));
 const nextId = require("../utils/nextId");
 
-// Middleware / Validation: if requirements not met will return error message
 
+// Middleware and Validation
+
+//Validate if name exists
 function nameExists(req, res, next) {
   const { data: { name } = {} } = req.body;
 
@@ -17,6 +19,7 @@ function nameExists(req, res, next) {
   });
 }
 
+//Validate if description exists
 function descriptionExists(req, res, next) {
   const { data: { description } = {} } = req.body;
 
@@ -30,6 +33,7 @@ function descriptionExists(req, res, next) {
   });
 }
 
+//Validate if price exists
 function priceExists(req, res, next) {
   const { data: { price } = {} } = req.body;
 
@@ -48,6 +52,7 @@ function priceExists(req, res, next) {
   return next();
 }
 
+//Validate existence of image
 function imageExists(req, res, next) {
   const { data: { image_url } = {} } = req.body;
 
@@ -61,6 +66,7 @@ function imageExists(req, res, next) {
   });
 }
 
+//Validate existence of specific dish
 function dishExists(req, res, next) {
   const { dishId } = req.params;
   const foundDish = dishes.find((dish) => dish.id === dishId);
@@ -75,11 +81,14 @@ function dishExists(req, res, next) {
   });
 }
 
-// CRUDL
+/********************************************/
 
+
+//CREATE FUNCTION
 function create(req, res) {
   const { data: { name, description, price, image_url } = {} } = req.body;
   const newId = nextId();
+
   const newDish = {
     id: newId,
     name,
@@ -92,25 +101,24 @@ function create(req, res) {
   res.status(201).json({ data: newDish });
 }
 
+//READ FUNCTION
 function read(req, res) {
   const dish = res.locals.dish;
   res.json({ data: dish });
 }
 
+//UPDATE FUNCTION
 function update(req, res, next) {
   const dish = res.locals.dish;
   const { dishId } = req.params;
   const { data: { id, name, description, price, image_url } = {} } = req.body;
-  if (!id || dishId === id) {
-    const updatedDish = {
-      id: dishId,
-      name,
-      description,
-      price,
-      image_url,
-    };
+  if (dishId === id) {
+    dish.name = name;
+    dish.description = description;
+    dish.price = price;
+    dish.image_url = image_url;
 
-    res.json({ data: updatedDish });
+    res.json({ data: dish });
   }
 
   next({
@@ -119,6 +127,7 @@ function update(req, res, next) {
   });
 }
 
+//LIST FUNCTION
 function list(req, res) {
   res.json({ data: dishes });
 }
